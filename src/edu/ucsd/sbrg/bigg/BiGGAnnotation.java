@@ -640,10 +640,7 @@ public class BiGGAnnotation {
     } else if (!isCheckable(resource, collection)) {
       return resource;
     } else if (!resource.contains("identifiers.org")) {
-      collection = Registry.getCollectionFor(resource);
-      if (!collection.isEmpty()) {
-        resource = Registry.getURI(collection, identifier);
-      }
+      resource = Registry.getCollectionFor(resource).map(coll -> Registry.getURI(coll, identifier)).get();
     }
     String regexp = Registry.getPattern(collection);
     if (regexp.equals("")) {

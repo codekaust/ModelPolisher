@@ -1,5 +1,5 @@
 /**
- * 
+ *
  */
 package edu.ucsd.sbrg.bigg;
 
@@ -16,20 +16,18 @@ import org.junit.Test;
  */
 public class BiGGIdTest {
 
-  static final String[] ID_STRINGS = {"G_1818", "R_EX_h2o_e", "M_nadh_c",
-    "M_14glucan_e", "R_2AGPE181tipp", "G_SDY_0121", "M_13_cis_retnglc_c",
-    "R_24_25DHVITD2tm", "G_10090_AT1", "M_20ahchsterol_m", "R_1a_24_25VITD2Hm",
-    "R_3DSPHR", "G_Acmsd", "M_12dgr_HP_c", "R_BIOMASS_HP_published",
-    "M_26dap__M_c", "R_BIOMASS_Ecoli_TM", "G_S_0001", "M_26dap_LL_c",
-    "R_BIOMASS_Ecoli_core_w_GAM", "G_test_mm_MM"};
-  static BiGGId[] testIds;
+  private static final String[] ID_STRINGS = {"G_1818", "R_EX_h2o_e", "M_nadh_c", "M_14glucan_e", "R_2AGPE181tipp",
+    "G_SDY_0121", "M_13_cis_retnglc_c", "R_24_25DHVITD2tm", "G_10090_AT1", "M_20ahchsterol_m", "R_1a_24_25VITD2Hm",
+    "R_3DSPHR", "G_Acmsd", "M_12dgr_HP_c", "R_BIOMASS_HP_published", "M_26dap__M_c", "R_BIOMASS_Ecoli_TM", "G_S_0001",
+    "M_26dap_LL_c", "R_BIOMASS_Ecoli_core_w_GAM", "G_test_mm_MM"};
+  private static BiGGId[] testIds;
 
 
   /**
    * Initializes BiGGId-Array for testing
    */
   @BeforeClass
-  public static final void setUp() {
+  public static void setUp() {
     testIds = new BiGGId[ID_STRINGS.length];
     for (int counter = 0; counter < ID_STRINGS.length; counter++) {
       testIds[counter] = new BiGGId(ID_STRINGS[counter]);
@@ -58,12 +56,11 @@ public class BiGGIdTest {
       BiGGId firstConstructorId = new BiGGId(ID_STRINGS[idPos]);
       BiGGId testId = testIds[idPos];
       BiGGId secondConstructorId =
-        new BiGGId(testId.getPrefix(), testId.getAbbreviation(),
-          testId.getCompartmentCode(), testId.getTissueCode());
+        new BiGGId(testId.getPrefix(), testId.getAbbreviation(), testId.getCompartmentCode(), testId.getTissueCode());
       assertEquals(testId, firstConstructorId);
-      assertTrue(testId.equals(firstConstructorId));
+      assertEquals(testId, firstConstructorId);
       assertEquals(testId, secondConstructorId);
-      assertTrue(testId.equals(secondConstructorId));
+      assertEquals(testId, secondConstructorId);
     }
   }
 
@@ -73,8 +70,8 @@ public class BiGGIdTest {
    */
   @Test
   public final void testIsSetAbbreviation() {
-    for (int idPos = 0; idPos < testIds.length; idPos++) {
-      assertTrue(testIds[idPos].isSetAbbreviation());
+    for (BiGGId testId : testIds) {
+      assertTrue(testId.isSetAbbreviation());
     }
   }
 
@@ -95,8 +92,8 @@ public class BiGGIdTest {
    */
   @Test
   public final void testIsSetPrefix() {
-    for (int idPos = 0; idPos < testIds.length; idPos++) {
-      assertTrue(testIds[idPos].isSetPrefix());
+    for (BiGGId testId : testIds) {
+      assertTrue(testId.isSetPrefix());
     }
     assertFalse(new BiGGId().isSetPrefix());
   }
@@ -226,7 +223,7 @@ public class BiGGIdTest {
 
 
   @AfterClass
-  public static final void cleanUp() {
+  public static void cleanUp() {
     testIds = null;
   }
 }

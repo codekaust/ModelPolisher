@@ -37,6 +37,19 @@ dependencies {
     testCompile "org.junit.jupiter:junit-jupiter-engine:5.1.0"
 }
 
+test {
+    testLogging {
+        events "passed", "skipped", "failed", "standardOut", "standardError"
+    }
+    dependsOn compileTestJava
+}
+
+task copyTestResources(type: Copy) {
+    from "${projectDir}/test/resources"
+    into "${buildDir}/classes/java/test/resources"
+}
+processTestResources.dependsOn copyTestResources
+
 // config for all jar tasks
 tasks.withType(Jar) {
     dependsOn test
@@ -134,7 +147,7 @@ clean.doFirst {
 // run db setup script, if bigg.sqlite is missing
 if (!project.file("resources/edu/ucsd/sbrg/bigg/bigg.sqlite").exists()) {
     task setupDB(type: Exec) {
-        commandLine("sh", "scripts/configureSQLiteDB.sh")
+        commandLine "./scripts/configureSQLiteDB.sh"
         println "Setup DB"
     }
     // run before resources are being processed

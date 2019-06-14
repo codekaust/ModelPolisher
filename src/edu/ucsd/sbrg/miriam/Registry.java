@@ -3,8 +3,10 @@ package edu.ucsd.sbrg.miriam;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.logging.Logger;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import edu.ucsd.sbrg.miriam.xjc.Miriam;
@@ -24,12 +26,13 @@ public class Registry {
 
   private static class Entry {
 
-    private String identifiersURI;
+    private List<String> alternativeURIs = new ArrayList<>();
+    private String primaryURI;
     private String regexPattern;
-    private List<String> URIs;
+    private HashMap<String, Boolean> URIs;
 
 
-    Entry(List<String> URIs, String regexPattern) {
+    Entry(HashMap<String, Boolean> URIs, String regexPattern) {
       this.URIs = URIs;
       this.regexPattern = regexPattern;
       extractPrimary();
@@ -37,21 +40,43 @@ public class Registry {
 
 
     private void extractPrimary() {
-      for (String URI : URIs) {
-        if (Pattern.matches("http://identifiers\\.org/.*", URI)) {
-          identifiersURI = URI;
+      for (Map.Entry<String, Boolean> URI : URIs.entrySet()) {
+        if (Pattern.matches("http://identifiers\\.org/.*", URI.getKey())) {
+          primaryURI = URI.getKey();
           break;
         }
       }
+      Set<String> remainingURIs = URIs.keySet();
+      remainingURIs.remove(primaryURI);
+      alternativeURIs.addAll(remainingURIs);
     }
 
 
     String getPrimaryURI() {
-      if (identifiersURI == null) {
-        return URIs.get(0);
+      if (primaryURI == null) {
+        return alternativeURIs.get(0);
       } else {
-        return identifiersURI;
+        return primaryURI;
       }
+    }
+
+
+    Optional<String> getPrimaryURI(String query) {
+      // only handle URLs for now
+      if (!query.contains("/")) {
+        logger.warning(String.format("Not a URL, can't get primary URI for %s", query));
+        return Optional.empty();
+      }
+      query = getCollectionPrefix(query);
+      if (query.equals(primaryURI)) {
+        return Optional.of(primaryURI);
+      }
+      for (String URI : alternativeURIs) {
+        if (URI.equals(query)) {
+          return Optional.of(primaryURI);
+        }
+      }
+      return Optional.empty();
     }
 
 
@@ -70,14 +95,14 @@ public class Registry {
     Miriam miriam = RegistryProvider.getInstance().getMiriam();
     for (Miriam.Datatype datatype : miriam.getDatatype()) {
       String pattern = datatype.getPattern();
-      List<String> stringURIs = new ArrayList<>();
+      HashMap<String, Boolean> allURIs = new HashMap<>();
       // ugly xjc generated Classes, a custom wrapper might be better here
       for (Uris uris : datatype.getUris()) {
         for (Uri uri : uris.getUri()) {
-          stringURIs.add(uri.getValue());
+          allURIs.put(uri.getValue(), uri.isDeprecated());
         }
       }
-      Entry entry = new Entry(stringURIs, pattern);
+      Entry entry = new Entry(allURIs, pattern);
       entries.put(getDataCollectionPartFromURI(entry.getPrimaryURI()), entry);
     }
     RegistryProvider.close();
@@ -118,20 +143,11 @@ public class Registry {
   /**
    * @param queryURI:
    *        Non identifiers.org URI
-   * @return identifiers.org URI, if found, else empty String
+   * @return identifiers.org URI, if found, else empty
    */
-  public static String getCollectionFor(String queryURI) {
-    Pattern pattern = Pattern.compile("/\\w+\\.\\w+\\.\\w+/");
-    Matcher matcher = pattern.matcher(queryURI);
-    if (matcher.find()) {
-      String collection = matcher.group(0);
-      // assuming www.*.*
-      collection = collection.split("\\.")[1];
-      if (entries.containsKey(collection)) {
-        return collection;
-      }
-    }
-    return "";
+  public static Optional<String> getCollectionFor(String queryURI) {
+    Optional<String> primaryURI = getPrimaryURI(queryURI);
+    return primaryURI.map(Registry::getDataCollectionPartFromURI);
   }
 
 
@@ -163,13 +179,44 @@ public class Registry {
     if (resource.contains(identifiersURL)) {
       // We know where the id should be in identifiers.org URLs
       resource = resource.substring(resource.indexOf(identifiersURL) + identifiersURL.length() + 1);
-      return resource.substring(resource.indexOf("/")+1);
+      return resource.substring(resource.indexOf("/") + 1);
     } else {
       // assume last part after slash is ID
       String[] split = resource.split("/");
       int len = split.length;
       return split[len - 1];
     }
+  }
+
+
+  /**
+   * @param queryURI:
+   *        Non identifiers.org URI
+   * @return identifiers.org URI, if found, else empty
+   */
+  public static Optional<String> getPrimaryURI(String queryURI) {
+    for (Map.Entry<String, Entry> entry : entries.entrySet()) {
+      Optional<String> collection = entry.getValue().getPrimaryURI(queryURI);
+      if (collection.isPresent()) {
+        return collection;
+      }
+    }
+    return Optional.empty();
+  }
+
+
+  /**
+   * @param queryURI
+   * @return
+   */
+  public static String getCollectionPrefix(String queryURI) {
+    String[] splits = queryURI.split("/");
+    int length = splits.length;
+    String prefix = String.join("/", splits[0], splits[1], splits[2]);
+    if (queryURI.contains("identifiers.org") || queryURI.contains("uniprot.org") && length > 3) {
+      prefix = String.join("/", prefix, splits[3]);
+    }
+    return prefix + "/";
   }
 
 

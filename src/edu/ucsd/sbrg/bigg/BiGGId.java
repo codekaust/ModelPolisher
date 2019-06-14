@@ -170,6 +170,15 @@ public class BiGGId {
 
 
   /**
+   * @param id
+   * @return
+   */
+  public static boolean isBiGGid(String id) {
+    return id.matches("^([RMG])_([a-zA-Z][a-zA-Z0-9_]+)(?:_([a-z][a-z0-9]?))?(?:_([A-Z][A-Z0-9]?))?$");
+  }
+
+
+  /**
    * @return
    */
   public boolean isSetAbbreviation() {
@@ -420,7 +429,7 @@ public class BiGGId {
    * @param tissueCode
    *        the tissueCode to set
    */
-  public void setTissueCode(String tissueCode) {
+  private void setTissueCode(String tissueCode) {
     if (tissueCode.matches("[A-Z][A-Z0-9]?")) {
       this.tissueCode = tissueCode;
     } else {
