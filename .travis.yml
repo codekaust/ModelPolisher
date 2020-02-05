@@ -2,8 +2,7 @@ dist: bionic
 language: java
 sudo: required
 env:
-- COMPOSE_FILE=docker-compose.devel.yml 
-- MODELS=bigg_models_data/models
+- COMPOSE_FILE=docker-compose.devel.yml MODELS=bigg_models_data/models
 jdk:
 - openjdk11
 services:
