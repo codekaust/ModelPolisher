@@ -62,7 +62,7 @@ task downloadMIRIAM(){
 tasks.withType(Jar) {
     dependsOn test
     dependsOn downloadMIRIAM
-    destinationDir = file("$rootDir/target")
+    destinationDirectory = file("$rootDir/target")
     manifest {
         attributes(
                 "Version": project.version,
@@ -77,15 +77,15 @@ tasks.withType(Jar) {
     }
 }
 
-//with dependencies, without bigg.sqlite
+//with dependencies
 task lightJar(type: Jar) {
-    baseName = project.name
     from {
         configurations.compile.collect {
             it.isDirectory() ? it : zipTree(it)
         }
     }
     with jar
+    dependsOn downloadMIRIAM
 }
 
 //build docker container
@@ -103,8 +103,8 @@ task zipLibs(type: Zip) {
     from "lib"
     into "lib"
     include "**/**"
-    archiveName = "lib.zip"
-    destinationDir = file("target/")
+    archiveFileName = "lib.zip"
+    destinationDirectory = file("target/")
 }
 
 // zip script files for release
@@ -112,8 +112,8 @@ task zipScripts(type: Zip) {
     from "src/scripts"
     into "scripts"
     include "**/**"
-    archiveName = "scripts.zip"
-    destinationDir = file("target/")
+    archiveFileName = "scripts.zip"
+    destinationDirectory = file("target/")
 }
 
 // create lightJar for release
