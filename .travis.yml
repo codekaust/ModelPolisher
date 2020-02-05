@@ -2,7 +2,7 @@ dist: bionic
 language: java
 sudo: required
 env:
-- COMPOSE_FILE=docker-compose.devel.yml MODELS=bigg_models_data/models
+- COMPOSE_FILE=docker-compose.devel.yml MODELS=$TRAVIS_BUILD_DIR/bigg_models_data/models
 jdk:
 - openjdk11
 services:
@@ -17,7 +17,7 @@ before_install:
 install:
 # use current build artifact instead of published version
 - printf "FROM openjdk:11-slim\n\nCOPY ModelPolisher-2.0.1.jar /\nCMD \"/bin/sh\"" > docker/java_docker/Dockerfile
-- ./gradlew devel && stat src/main/resources/edu/ucsd/sbrg/miriam/IdentifiersOrg-Registry.json && jar -tf target/ModelPolisher-2.0.1.jar | grep IdentifiersOrg-Registry.json
+- gradle devel
 - docker-compose up -d
 - docker ps -a
 before_script:
@@ -32,8 +32,5 @@ script:
 - travis_wait docker-compose run -v $MODELS:/models polisher sh -c "java -jar /ModelPolisher-2.0.1.jar --input=/models/RECON1.xml --output=/models/out/RECON1.xml --annotate-with-bigg=true --add-adb-annotations=true --output-combine=true && ls -lish models/out"
 after_script:
 - docker-compose down
-cache:
-  directories:
-  - bigg_models_data
 git:
   depth: 1
